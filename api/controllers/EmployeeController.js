@@ -7,7 +7,7 @@
 
 var Client = require('node-rest-client').Client;
 var client = new Client();
-var endpoint = "http://localhost:1337/employee"
+var endpoint = "http://localhost:1337/users"
 
 module.exports = {
 
@@ -44,7 +44,7 @@ module.exports = {
   read: function (req, res) {
 
     client.get(endpoint, function (data, response) {
-        return res.view('read', {employees: data});
+        return res.view('read', {users: data});
     }).on('error', function (err) {
         return res.view('read', {error: { message: "There was an error getting the employees"}});
     });
@@ -56,19 +56,53 @@ module.exports = {
    * `EmployeeController.update()`
    */
   update: function (req, res) {
-    return res.json({
-      todo: 'update() is not implemented yet!'
+      if(req.method != "POST"){ 
+        client.get(endpoint, function (data, response) {
+        return res.view('update', {users: data});
+    }).on('error', function (err) {
+        return res.view('update', {error: { message: "There was an error getting the employees"}});
     });
-  },
+    }else{
+    
+    var args = {
+      data: req.body,
+      header: {"Content-Type": "application/json"}
+    };
+    client.post(endpoint + "/" + req.body.id, args, function (data, response){
+      if(response.statusCode != "200"){
+        return res.view('update', {error:{message: response.statusMessage + ": " + data.response}});
+    }
+    return res.redirect('back');
+    return res.view('update', {success:{message: "Record updated successfully"}});
+   })
+  }
+    }, 
+  
 
 
   /**
    * `EmployeeController.delete()`
    */
   delete: function (req, res) {
-    return res.json({
-      todo: 'delete() is not implemented yet!'
+    if(req.method != "POST"){
+           client.get(endpoint, function (data, response) {
+        return res.view('delete', {users: data});
+    }).on('error', function (err) {
+        return res.view('delete', {error: { message: "There was an error getting the employees"}});
     });
+    }else{
+    var args = {
+      data: req.body,
+      header: {"Content-Type": "application/json"}
+    };
+    client.delete(endpoint + "/" + req.body.id, args, function (data, response){
+      if(response.statusCode != "200"){
+        return res.view('delete', {error:{message: response.statusMessage + ": " + data.response}});
+    }
+
+    return res.view('delete', {success:{message: "Record deleted successfully"}});
+   })
   }
-};
+}
+}
 
